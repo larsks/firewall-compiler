@@ -1,4 +1,4 @@
 *filter
--A INPUT -p tcp --dport 22 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT 
 COMMIT
 
