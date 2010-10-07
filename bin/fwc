@@ -5,10 +5,11 @@ import sys
 import re
 import optparse
 import logging
+import time
 
 from Cheetah.Template import Template
 
-from fwc.firewall import Firewall
+from fwc.firewall import Firewall, SyntaxError
 
 def parse_args():
     p = optparse.OptionParser()
@@ -21,45 +22,87 @@ def parse_args():
         action='append', default=[])
     p.add_option('-D', '--dump',
             action='store_true')
+    p.add_option('--debug',
+            action='store_true')
 
     return p.parse_args()
 
-def main():
+def debug_dump(fw):
+    import pprint
+    pprint.pprint(fw.rules)
+    pprint.pprint(fw.chains)
+
+def generate_output (fw, opts):
+    tmpl = Template(
+            file=opts.master_template,
+            namespaces={
+                'rules': fw.rules,
+                'producer': 'firewall-compiler',
+                'date': time.strftime('%Y-%m-%d %H:%H:%S',
+                    time.localtime()),
+                })
+
+    if opts.output:
+        sys.stdout = open(opts.output, 'w')
+
+    print tmpl
+
+def read_rules (fw, opts):
+    global log
+
+    try:
+        for rfile in sorted(os.listdir(opts.rules_dir)):
+            # ignore dotfiles.
+            if rfile.startswith('.'):
+                continue
+
+            # only read *.rules files.
+            if not rfile.endswith('.rules'):
+                continue
+
+            # handle explicit exclusions via -x command line option.
+            if os.path.splitext(rfile)[0] in opts.exclude:
+                log.info('excluding %s' % rfile)
+                continue
+
+            log.info('Reading %s' % rfile)
+            fw.update(os.path.join(opts.rules_dir, rfile))
+    except SyntaxError, detail:
+        log.error(str(detail))
+        sys.exit(1)
+
+def configure_logging(opts):
+    global log
+
+    if opts.debug:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+
     logging.basicConfig(
-            level=logging.INFO,
+            level=level,
             datefmt='%Y-%m-%d %H:%M:%S',
             format='%(asctime)s %(name)s [%(levelname)s]: %(message)s')
+
     log = logging.getLogger('fwc')
+
+def main():
+    global log
+
     opts, args = parse_args()
+    configure_logging(opts)
     fw = Firewall()
 
-    for rfile in sorted(os.listdir(opts.rules_dir)):
-        # ignore dotfiles.
-        if rfile.startswith('.'):
-            continue
-
-        # only read *.rules files.
-        if not rfile.endswith('.rules'):
-            continue
-
-        # handle explicit exclusions via -x command line option.
-        if os.path.splitext(rfile)[0] in opts.exclude:
-            log.info('excluding %s' % rfile)
-            continue
-
-        fw.update(os.path.join(opts.rules_dir, rfile))
+    log.info('Start reading rules.')
+    read_rules(fw, opts)
+    log.info('Finished reading rules.')
 
     if opts.dump:
-        import pprint
-        pprint.pprint(fw.rules)
-        pprint.pprint(fw.chains)
+        log.info('Generating debug dump.')
+        debug_dump(fw)
     else:
-        tmpl = Template(file=opts.master_template, namespaces={'rules': fw.rules})
-
-        if opts.output:
-            sys.stdout = open(opts.output, 'w')
-
-        print tmpl
+        log.info('Generating output.')
+        generate_output(fw, opts)
 
 if __name__ == '__main__':
     main()

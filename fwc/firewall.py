@@ -1,4 +1,5 @@
 import re
+import logging
 
 re_begin_table=re.compile('^\*(?P<table>.*)')
 re_add_rule=re.compile('^-A (?P<chain>\S+) (?P<rule>[^#]*)\s*(#\s*(?P<comment>.*))?')
@@ -6,8 +7,18 @@ re_end_table=re.compile('^COMMIT$')
 re_comment=re.compile('^#.*')
 re_define_chain=re.compile('^:(?P<chain>\S+) (?P<policy>\S+) \[(?P<in>\d+):(?P<out>\d+)\]')
 
+class SyntaxError(Exception):
+    def __init__ (self, file=None, line=None):
+        super(SyntaxError, self).__init__()
+        self.file = file
+        self.line = line
+
+    def __str__ (self):
+        return 'Syntax error in %s: %s' % (self.file, self.line)
+
 class Firewall (object):
     def __init__ (self):
+        self.log = logging.getLogger('fwc.firewall')
         self.statemap = {
             0:  [
                 (re_begin_table, self.p_start_table),
@@ -30,6 +41,7 @@ class Firewall (object):
 
     def p_start_table(self, mo, line):
         table = mo.group('table')
+        self.log.debug('start table: %s' % table)
 
         self.ctx['table'] = table
         if not table in self.rules:
@@ -40,19 +52,23 @@ class Firewall (object):
         pass
 
     def p_add_rule(self, mo,line):
-        chain = mo.group('chain')
         table = self.ctx['table']
+        chain = mo.group('chain')
 
         if not chain in self.rules[table]:
             self.rules[table][chain] = []
 
         rule = mo.group('rule')
+        self.log.debug('table=%s, chain=%s, rule=%s' % (table, chain,
+            rule))
         if mo.group('comment'):
             rule += ' -m comment --comment "%s"' % mo.group('comment')
 
         self.rules[table][chain].append(rule)
 
     def p_end_table(self, mo, line):
+        table = self.ctx['table']
+        self.log.debug('finished table: %s' % table)
         self.ctx['state'] = 0
 
     def update(self, rfile):
@@ -72,5 +88,6 @@ class Firewall (object):
                     break
 
             if not handled:
-                print 'UNRECOGNIZED:', line
+                raise SyntaxError(file=rfile, line=line)
+
 
