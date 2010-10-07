@@ -13,6 +13,7 @@ Requires:	python-cheetah
 Requires:	iptables
 
 Buildarch:	noarch
+Buildrequires:	python-setuptools
 
 %description
 Build an iptables firewall from modules.
