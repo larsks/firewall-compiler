@@ -1,0 +1,47 @@
+#if 'nat' in $rules
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+#for chain in $rules.nat
+#if $chain not in [ 'PREROUTING', 'POSTROUTING', 'OUTPUT']
+:$chain - [0:0]
+#end if
+#end for
+
+#for chain in $rules.nat
+#for rule in $rules.nat[$chain]
+-A $chain $rule
+#end for
+#end for
+COMMIT
+#end if
+
+#if 'filter' in $rules
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+#for chain in $rules.filter
+#if $chain not in [ 'INPUT', 'FORWARD', 'OUPUT' ]
+:$chain - [0:0]
+#end if
+#end for
+
+-A INPUT -i lo -j ACCEPT 
+-A INPUT -p icmp -m icmp --icmp-type any -j ACCEPT 
+-A INPUT -p esp -j ACCEPT 
+-A INPUT -p ah -j ACCEPT 
+-A INPUT -d 224.0.0.251 -p udp -m udp --dport 5353 -j ACCEPT 
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+#for chain in $rules.filter
+#for rule in $rules.filter[$chain]
+-A $chain $rule 
+#end for
+#end for
+
+-A INPUT -j REJECT --reject-with icmp-host-prohibited 
+COMMIT
+#end if
+
