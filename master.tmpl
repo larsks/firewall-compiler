@@ -9,12 +9,15 @@
 #end if
 #end for
 
+# START OF GENERATED RULES
 #for chain in $rules.nat
 #for rule in $rules.nat[$chain]
 -A $chain $rule
 #end for
 #end for
 COMMIT
+# END OF GENERATED RULES
+
 #end if
 
 #if 'filter' in $rules
@@ -32,15 +35,21 @@ COMMIT
 -A INPUT -p icmp -m icmp --icmp-type any -j ACCEPT 
 -A INPUT -p esp -j ACCEPT 
 -A INPUT -p ah -j ACCEPT 
--A INPUT -d 224.0.0.251 -p udp -m udp --dport 5353 -j ACCEPT 
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
+# START OF GENERATED RULES
 #for chain in $rules.filter
 #for rule in $rules.filter[$chain]
 -A $chain $rule 
 #end for
 #end for
+# END OF GENERATED RULES
 
+# Ignore broadcast and multicast traffic so that we don't
+# clutter our firewall logs with junk.
+-A INPUT -m pkttype --pkt-type multicast -j DROP
+-A INPUT -m pkttype --pkt-type broadcast -j DROP
+-A INPUT -j LOG -m limit --limit 1/s
 -A INPUT -j REJECT --reject-with icmp-host-prohibited 
 COMMIT
 #end if
