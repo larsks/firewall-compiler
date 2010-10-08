@@ -1,0 +1,21 @@
+#!/usr/bin/python
+
+import os
+import sys
+
+from fwc import firewall
+from fwc import config
+
+if __name__ == '__main__':
+    c = config.Config()
+    opts, args = c.parse_args()
+    firewall.configure_logging(opts)
+    fw = firewall.Firewall(opts)
+
+    for name in args:
+        if 'enable' in sys.argv[0]:
+            fw.enable_ruleset(name)
+        elif 'disable' in sys.argv[0]:
+            fw.disable_ruleset(name)
+
+

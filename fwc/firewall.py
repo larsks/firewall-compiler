@@ -1,5 +1,10 @@
+import os
 import re
 import logging
+import optparse
+import logging
+
+from exceptions import *
 
 re_begin_table=re.compile('^\*(?P<table>.*)')
 re_add_rule=re.compile('^-A (?P<chain>\S+) (?P<rule>[^#]*)\s*(#\s*(?P<comment>.*))?')
@@ -7,17 +12,9 @@ re_end_table=re.compile('^COMMIT$')
 re_comment=re.compile('^#.*')
 re_define_chain=re.compile('^:(?P<chain>\S+) (?P<policy>\S+) \[(?P<in>\d+):(?P<out>\d+)\]')
 
-class SyntaxError(Exception):
-    def __init__ (self, file=None, line=None):
-        super(SyntaxError, self).__init__()
-        self.file = file
-        self.line = line
-
-    def __str__ (self):
-        return 'Syntax error in %s: %s' % (self.file, self.line)
-
 class Firewall (object):
-    def __init__ (self):
+    def __init__ (self, config):
+        self.config = config
         self.log = logging.getLogger('fwc.firewall')
         self.statemap = {
             0:  [
@@ -90,4 +87,58 @@ class Firewall (object):
             if not handled:
                 raise SyntaxError(file=rfile, line=line)
 
+    def read_rules (self):
+        for rfile in sorted(os.listdir(self.config.rules_active)):
+            # ignore dotfiles.
+            if rfile.startswith('.'):
+                continue
+
+            # only read *.rules files.
+            if not rfile.endswith('.rules'):
+                continue
+
+            # handle explicit exclusions via -x command line option.
+            if os.path.splitext(rfile)[0] in self.config.exclude:
+                self.log.info('excluding %s' % rfile)
+                continue
+
+            self.log.info('Reading %s' % rfile)
+            self.update(os.path.join(self.config.rules_active, rfile))
+
+    def enable_ruleset(self, ruleset):
+        if not ruleset.endswith('.rules'):
+            ruleset = '%s.rules' % ruleset
+
+        spath = os.path.join(self.config.rules_inactive, ruleset)
+        dpath = os.path.join(self.config.rules_active, ruleset)
+
+        if os.path.exists(dpath):
+            self.log.info('ruleset %s is already active.' % ruleset)
+        else:
+            os.symlink(os.path.abspath(spath), dpath)
+            self.log.info('activated ruleset %s.' % ruleset)
+
+    def disable_ruleset(self, ruleset):
+        if not ruleset.endswith('.rules'):
+            ruleset = '%s.rules' % ruleset
+
+        spath = os.path.join(self.config.rules_inactive, ruleset)
+        dpath = os.path.join(self.config.rules_active, ruleset)
+
+        if os.path.exists(dpath):
+            os.unlink(dpath)
+            self.log.info('deactivated ruleset %s.' % ruleset)
+        else:
+            self.log.info('ruleset %s is not active.' % ruleset)
+
+def configure_logging(opts):
+    if opts.debug:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+
+    logging.basicConfig(
+            level=level,
+            datefmt='%Y-%m-%d %H:%M:%S',
+            format='%(asctime)s %(name)s [%(levelname)s]: %(message)s')
 

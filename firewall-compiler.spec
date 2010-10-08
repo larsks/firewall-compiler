@@ -1,6 +1,6 @@
 Name:		firewall-compiler
-Version:	1
-Release:	3%{?dist}
+Version:	2
+Release:	1%{?dist}
 Summary:	Build an iptables firewall from modules.
 
 Group:		SEAS
@@ -27,11 +27,16 @@ Build an iptables firewall from modules.
 rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/etc/firewall
 install -d -m 755 $RPM_BUILD_ROOT/etc/firewall/rules.d
+install -d -m 755 $RPM_BUILD_ROOT/etc/firewall/rules.enabled
 install -d -m 755 $RPM_BUILD_ROOT%{_bindir}
 
 python setup.py install --root=$RPM_BUILD_ROOT
 
+ln -s fwc-tool $RPM_BUILD_ROOT%{_bindir}/fwc-enable
+ln -s fwc-tool $RPM_BUILD_ROOT%{_bindir}/fwc-disable
+
 install -m 644 master.tmpl $RPM_BUILD_ROOT/etc/firewall
+install -m 644 fwc.conf $RPM_BUILD_ROOT/etc/firewall
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -40,10 +45,14 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %doc rules.d/*
 
-%config(noreplace) /etc/firewall/master.tmpl
+/etc/firewall/master.tmpl
+%config(noreplace) /etc/firewall/fwc.conf
 
 /usr/lib
 %{_bindir}/fwc
+%{_bindir}/fwc-tool
+%{_bindir}/fwc-enable
+%{_bindir}/fwc-disable
 
 %changelog
 
