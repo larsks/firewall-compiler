@@ -6,16 +6,29 @@ import sys
 from fwc import firewall
 from fwc import config
 
+def fwc_enable(args):
+    for name in args:
+        fw.enable_ruleset(name)
+
+def fwc_disable(args):
+    for name in args:
+        fw.disable_ruleset(name)
+
+def fwc_list(args):
+    pass
+
 if __name__ == '__main__':
     c = config.Config()
     opts, args = c.parse_args()
     firewall.configure_logging(opts)
     fw = firewall.Firewall(opts)
 
-    for name in args:
-        if 'enable' in sys.argv[0]:
-            fw.enable_ruleset(name)
-        elif 'disable' in sys.argv[0]:
-            fw.disable_ruleset(name)
+    myname = os.path.basename(sys.argv[0])
 
+    if myname == 'fwc-enable':
+        fwc_enable(args)
+    elif myname == 'fwc-disable':
+        fwc_disable(args)
+    elif myname == 'fwc-list':
+        fwc_list(args)
 
