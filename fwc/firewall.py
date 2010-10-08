@@ -105,6 +105,21 @@ class Firewall (object):
             self.log.info('Reading %s' % rfile)
             self.update(os.path.join(self.config.rules_active, rfile))
 
+    def is_enabled(self, ruleset):
+        if not ruleset.endswith('.rules'):
+            ruleset = '%s.rules' % ruleset
+
+        dpath = os.path.join(self.config.rules_active, ruleset)
+        return os.path.isfile(dpath)
+
+    def available_rulesets (self):
+        rulesets = []
+
+        for ruleset in os.listdir(self.config.rules_inactive):
+            rulesets.append(ruleset)
+
+        return rulesets
+
     def enable_ruleset(self, ruleset):
         if not ruleset.endswith('.rules'):
             ruleset = '%s.rules' % ruleset
