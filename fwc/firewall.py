@@ -112,11 +112,19 @@ class Firewall (object):
         spath = os.path.join(self.config.rules_inactive, ruleset)
         dpath = os.path.join(self.config.rules_active, ruleset)
 
-        if os.path.exists(dpath):
+        if os.path.isfile(dpath):
             self.log.info('ruleset %s is already active.' % ruleset)
-        else:
+        elif os.path.isfile(spath):
+            try:
+                # this will make sure we remove broken symlinks.
+                os.unlink(dpath)
+            except OSError:
+                pass
+
             os.symlink(os.path.abspath(spath), dpath)
             self.log.info('activated ruleset %s.' % ruleset)
+        else:
+            self.log.error('ruleset %s does not exist.' % ruleset)
 
     def disable_ruleset(self, ruleset):
         if not ruleset.endswith('.rules'):
@@ -125,7 +133,7 @@ class Firewall (object):
         spath = os.path.join(self.config.rules_inactive, ruleset)
         dpath = os.path.join(self.config.rules_active, ruleset)
 
-        if os.path.exists(dpath):
+        if os.path.isfile(dpath):
             os.unlink(dpath)
             self.log.info('deactivated ruleset %s.' % ruleset)
         else:
