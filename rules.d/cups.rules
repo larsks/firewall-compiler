@@ -1,5 +1,5 @@
 *filter
--A fw-input -p udp -m udp --dport 631 -j ACCEPT 
--A fw-input -p tcp -m tcp --dport 631 -j ACCEPT 
+-A INPUT -p udp -m udp --dport 631 -j ACCEPT 
+-A INPUT -p tcp -m tcp --dport 631 -j ACCEPT 
 COMMIT
 
