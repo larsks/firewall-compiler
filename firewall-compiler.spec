@@ -53,7 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) /etc/firewall/fwc.conf
 
 %dir /etc/firewall/rules.enabled
-/etc/firewall/rules.d/*.rules
+%config(noreplace) /etc/firewall/rules.d/*.rules
 
 /usr/lib
 %{_bindir}/fwc
