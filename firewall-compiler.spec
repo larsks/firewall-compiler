@@ -1,6 +1,6 @@
 Name:		firewall-compiler
 Version:	2
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Build an iptables firewall from modules.
 
 Group:		SEAS
