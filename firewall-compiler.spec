@@ -38,15 +38,22 @@ ln -s fwc-tool $RPM_BUILD_ROOT%{_bindir}/fwc-disable
 install -m 644 master.tmpl $RPM_BUILD_ROOT/etc/firewall
 install -m 644 fwc.conf $RPM_BUILD_ROOT/etc/firewall
 
+for x in rules.d/*.rules; do
+	install -m 644 $x $RPM_BUILD_ROOT/etc/firewall/rules.d
+done
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc rules.d/*
+%doc README.rst
 
 /etc/firewall/master.tmpl
 %config(noreplace) /etc/firewall/fwc.conf
+
+%dir /etc/firewall/rules.enabled
+/etc/firewall/rules.d/*.rules
 
 /usr/lib
 %{_bindir}/fwc
