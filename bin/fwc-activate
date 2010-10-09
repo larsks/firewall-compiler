@@ -1,0 +1,11 @@
+#!/bin/sh
+
+tmpfile=$(mktemp /etc/firewall/iptables.XXXXXX)
+trap 'rm -f $tmpfile' EXIT INT TERM HUP
+
+fwc -o $tmpfile
+if iptables-restore -t < $tmpfile; then
+	install -m 600 -o root -g root $tmpfile /etc/sysconfig/iptables
+	/sbin/service iptables restart
+fi
+

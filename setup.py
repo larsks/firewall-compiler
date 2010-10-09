@@ -11,6 +11,6 @@ setup(name='firewall-compiler',
         author='Lars Kellogg-Stedman',
         author_email='lars@seas.harvard.edu',
         packages=['fwc'],
-        scripts=['bin/fwc', 'bin/fwc-tool'],
+        scripts=['bin/fwc', 'bin/fwc-tool', 'bin/fwc-activate'],
         )
 

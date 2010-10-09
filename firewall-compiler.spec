@@ -1,6 +1,6 @@
 Name:		firewall-compiler
 Version:	2
-Release:	4%{?dist}
+Release:	5%{?dist}
 Summary:	Build an iptables firewall from modules.
 
 Group:		SEAS
@@ -62,6 +62,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/fwc-enable
 %{_bindir}/fwc-disable
 %{_bindir}/fwc-list
+%{_bindir}/fwc-activate
 
 %changelog
 
