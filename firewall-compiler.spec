@@ -26,6 +26,9 @@ Group: SEAS
 Requires: firewall-compiler
 Requires: incron
 
+%description autoactivate
+Automatically activate firewall changes after runnin fwc-enable/fwc-disable.
+
 %prep
 %setup -q
 
