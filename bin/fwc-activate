@@ -7,13 +7,17 @@ trap 'rm -f $tmpfile' EXIT INT TERM HUP
 
 fwc -o $tmpfile
 
-if diff -q <(grep -v '^#' $tmpfile) <(grep -v '^#' $SYSTEM_IPTABLES); then
+# See if there are any changes.
+if diff -q <(grep -v '^#' $SYSTEM_IPTABLES) <(grep -v '^#' $tmpfile) > /dev/null 2>&1; then
 	echo "No changes."
 	exit 0
 fi
 
-if iptables-restore -t < $tmpfile; then
-	install -m 600 -o root -g root $tmpfile $SYSTEM_IPTABLES
-	/sbin/service iptables restart
+if ! iptables-restore -t < $tmpfile; then
+	echo "ERROR: firewall rules failed syntax check." >&2
+	exit 1
 fi
+
+install -m 600 -o root -g root $tmpfile $SYSTEM_IPTABLES
+/sbin/service iptables restart
 
