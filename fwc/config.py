@@ -25,6 +25,7 @@ config = attrdict(
     template        = '%(fwdir)s/master.tmpl',
     rules_active    = '%(fwdir)s/rules.enabled',
     rules_inactive  = '%(fwdir)s/rules.d',
+    config          = '%(fwdir)s/fwc.conf',
 )
 
 class Config (object):
@@ -35,7 +36,8 @@ class Config (object):
         self.config = config
 
         self.parser = optparse.OptionParser()
-        self.parser.add_option('-f', '--config')
+        self.parser.add_option('-f', '--config',
+                default=self.config.config)
         self.parser.add_option('-d', '--fwdir')
         self.parser.add_option('-t', '--template')
 
