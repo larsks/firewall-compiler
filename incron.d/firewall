@@ -1,0 +1,1 @@
+/etc/firewall/rules.enabled IN_CREATE,IN_DELETE /usr/bin/fwc-activate
