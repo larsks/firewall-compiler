@@ -81,6 +81,6 @@ rm -rf $RPM_BUILD_ROOT
 /etc/incron.d/firewall
 
 %changelog
-* Tue 12 Oct 2010 Lars Kellogg-Stedman <lars@seas.harvard.edu>
+* Tue Oct 12 2010 Lars Kellogg-Stedman <lars@seas.harvard.edu>
 - initial package build
 
