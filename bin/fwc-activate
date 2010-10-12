@@ -1,11 +1,19 @@
-#!/bin/sh
+#!/bin/bash
+
+SYSTEM_IPTABLES=/etc/sysconfig/iptables
 
 tmpfile=$(mktemp /etc/firewall/iptables.XXXXXX)
 trap 'rm -f $tmpfile' EXIT INT TERM HUP
 
 fwc -o $tmpfile
+
+if diff -q <(grep -v '^#' $tmpfile) <(grep -v '^#' $SYSTEM_IPTABLES); then
+	echo "No changes."
+	exit 0
+fi
+
 if iptables-restore -t < $tmpfile; then
-	install -m 600 -o root -g root $tmpfile /etc/sysconfig/iptables
+	install -m 600 -o root -g root $tmpfile $SYSTEM_IPTABLES
 	/sbin/service iptables restart
 fi
 
